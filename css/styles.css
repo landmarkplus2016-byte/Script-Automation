@@ -1,0 +1,139 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap');
+
+/* ── Variables ──────────────────────────────────────────────── */
+:root {
+  --bg-base:      #0f172a;
+  --bg-panel:     #1e293b;
+  --bg-card:      #0f172a;
+  --border:       #334155;
+  --text-primary: #f1f5f9;
+  --text-muted:   #94a3b8;
+  --text-dim:     #64748b;
+  --accent:       #3b82f6;
+  --accent-dark:  #1d4ed8;
+  --green:        #22c55e;
+  --green-dark:   #065f46;
+  --amber:        #f59e0b;
+  --red:          #ef4444;
+
+  --font-mono:    'Fira Code', 'Consolas', monospace;
+  --panel-width:  380px;
+  --tab-height:   48px;
+  --radius:       8px;
+  --radius-sm:    4px;
+}
+
+/* ── Reset ──────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbars ─────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+/* ── Tab Switcher — desktop hidden ──────────────────────────── */
+#tab-switcher {
+  display: none;
+}
+
+/* ── App Shell — split panel ────────────────────────────────── */
+#app {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#form-panel {
+  display: flex;
+  flex-direction: column;
+  width: var(--panel-width);
+  min-width: var(--panel-width);
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg-panel);
+  border-right: 1px solid var(--border);
+}
+
+#preview-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg-base);
+}
+
+/* ── Mobile ─────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  html,
+  body {
+    overflow: hidden;
+    height: 100%;
+  }
+
+  #tab-switcher {
+    display: flex;
+    flex-shrink: 0;
+    width: 100%;
+    height: var(--tab-height);
+    background-color: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+  }
+
+  #app {
+    flex-direction: column;
+    height: calc(100vh - var(--tab-height));
+  }
+
+  #form-panel,
+  #preview-panel {
+    display: none;
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    border-right: none;
+  }
+
+  #form-panel.panel--active,
+  #preview-panel.panel--active {
+    display: flex;
+  }
+}
