@@ -29,9 +29,49 @@
   <main id="app">
 
     <section id="form-panel" class="panel">
-      <header id="form-header" class="panel-header"></header>
-      <div id="form-content" class="panel-body"></div>
-      <footer id="form-footer" class="panel-footer"></footer>
+      <header id="form-header" class="panel-header">
+        <div class="header-brand">
+          <span class="header-logo">◈ EEC</span>
+          <div class="header-titles">
+            <div class="header-name">Equipment Configurator</div>
+            <div class="header-sub">NETCONF XML · Ericsson RBS</div>
+          </div>
+        </div>
+      </header>
+
+      <div id="form-content" class="panel-body">
+        <section class="form-section">
+          <span class="section-label">Node Settings</span>
+          <div class="field-row">
+            <label class="field-label" for="node-id">Node ID</label>
+            <input type="text" id="node-id" class="input-text input-text--full" value="1" autocomplete="off" spellcheck="false">
+          </div>
+          <div class="field-row">
+            <label class="field-label" for="support-system-control">Support Sys.</label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="support-system-control" class="checkbox">
+              <span>Support System Control</span>
+            </label>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <span class="section-label">Bands</span>
+          <div id="band-list" class="band-list"></div>
+          <div class="add-band-group">
+            <button id="btn-add-44XX"   class="btn-add">44XX</button>
+            <button id="btn-add-0900"   class="btn-add">0900</button>
+            <button id="btn-add-1800"   class="btn-add">1800</button>
+            <button id="btn-add-2100"   class="btn-add">2100</button>
+            <button id="btn-add-CUSTOM" class="btn-add btn-add--ghost">+ Custom</button>
+          </div>
+        </section>
+      </div>
+
+      <footer id="form-footer" class="panel-footer">
+        <button id="btn-copy"     class="btn-action">Copy XML</button>
+        <button id="btn-download" class="btn-action btn-action--primary">&#8595; Download</button>
+      </footer>
     </section>
 
     <section id="preview-panel" class="panel">
@@ -40,6 +80,10 @@
         <span id="preview-linecount"></span>
       </header>
       <pre id="xml-output"></pre>
+      <footer id="preview-footer" class="panel-footer">
+        <button id="preview-btn-copy"     class="btn-action">Copy XML</button>
+        <button id="preview-btn-download" class="btn-action btn-action--primary">&#8595; Download</button>
+      </footer>
     </section>
 
   </main>

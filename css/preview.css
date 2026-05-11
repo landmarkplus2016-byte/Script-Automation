@@ -1,0 +1,159 @@
+/* ── Preview panel header ────────────────────────────────────── */
+#preview-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  height: 38px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+
+#preview-filename {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+#preview-linecount {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+/* ── XML output area ─────────────────────────────────────────── */
+#xml-output {
+  flex: 1;
+  margin: 0;
+  padding: 16px 20px;
+  background: #020617;
+  color: #94a3b8;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  overflow: auto;
+  white-space: pre;
+  word-break: normal;
+  tab-size: 2;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── XML syntax highlight colors ─────────────────────────────── */
+.xt-open  { color: #60a5fa; }
+.xt-close { color: #f87171; }
+.xt-attr  { color: #a78bfa; }
+.xt-val   { color: #86efac; }
+.xt-delim { color: #f59e0b; }
+
+/* ── Preview panel scrollbars ────────────────────────────────── */
+#xml-output::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+#xml-output::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#xml-output::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 3px;
+}
+
+#xml-output::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+#xml-output::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* ── Preview footer ──────────────────────────────────────────── */
+#preview-footer {
+  flex-shrink: 0;
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border);
+}
+
+#preview-footer .btn-action {
+  flex: 1;
+  padding: 7px 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+#preview-footer .btn-action:hover {
+  background: var(--bg-card);
+  border-color: var(--text-dim);
+  color: var(--text-primary);
+}
+
+#preview-footer .btn-action:active {
+  transform: translateY(1px);
+}
+
+#preview-footer .btn-action--primary {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+  color: #fff;
+}
+
+#preview-footer .btn-action--primary:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ── Empty state ─────────────────────────────────────────────── */
+#xml-output:empty::before {
+  content: '<!-- Add a band to generate XML -->';
+  color: var(--text-dim);
+  font-style: normal;
+}
+
+/* ── Mobile ──────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  #preview-panel {
+    height: 100%;
+    display: none;
+  }
+
+  #preview-panel.panel--active {
+    display: flex;
+  }
+
+  #preview-header {
+    height: var(--tab-height);
+    padding: 0 12px;
+  }
+
+  #xml-output {
+    font-size: 11px;
+    padding: 12px;
+  }
+
+  #preview-footer {
+    padding: 8px 12px;
+  }
+}
