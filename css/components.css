@@ -313,6 +313,64 @@
   opacity: 0.4;
 }
 
+/* ── RiPort mapping ────────────────────────────────────────── */
+.riport-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.riport-item {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.riport-sector {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+}
+
+.riport-select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: var(--bg-soft);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2398a6bb' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 4px 22px 4px 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  outline: none;
+  min-width: 76px;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.riport-select:hover {
+  background-color: #e6edf6;
+}
+
+.riport-select:focus {
+  background-color: #fff;
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.riport-select.is-override {
+  background-color: var(--accent-soft);
+  color: var(--accent);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23006fee' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
 /* ── Update banner (SW notification) ──────────────────────── */
 .update-banner {
   position: fixed;
@@ -353,4 +411,34 @@
 
 .update-btn:hover {
   background: var(--accent-strong);
+}
+
+/* ── Mobile panel visibility (must be last — overrides form.css & preview.css) ── */
+@media (max-width: 900px) {
+  .pane-form,
+  .pane-preview {
+    display: none;
+    border-radius: var(--radius);
+  }
+
+  .pane-form.active,
+  .pane-preview.active {
+    display: flex;
+  }
+
+  .form-scroll {
+    padding: 16px 14px 24px;
+  }
+
+  .node-card {
+    padding: 4px 12px;
+  }
+
+  .band-head {
+    padding: 12px 12px 8px;
+  }
+
+  .band-body {
+    padding: 4px 12px 12px;
+  }
 }

@@ -254,30 +254,4 @@ input, select { font-family: inherit; color: inherit; }
     background: var(--accent-soft);
   }
 
-  .pane-form,
-  .pane-preview {
-    display: none;
-    border-radius: var(--radius);
-  }
-
-  .pane-form.active,
-  .pane-preview.active {
-    display: flex;
-  }
-
-  .form-scroll {
-    padding: 16px 14px 24px;
-  }
-
-  .node-card {
-    padding: 4px 12px;
-  }
-
-  .band-head {
-    padding: 12px 12px 8px;
-  }
-
-  .band-body {
-    padding: 4px 12px 12px;
-  }
 }

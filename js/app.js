@@ -1,6 +1,7 @@
 import { generateXML } from './generator.js';
-import { renderBandCards, updatePreview } from './ui.js';
+import { renderBandCards, updatePreview, updateRiPortSelects } from './ui.js';
 import { copyXMLToClipboard, downloadXMLFile } from './download.js';
+import { allocatePorts } from './config.js';
 
 // ── State ────────────────────────────────────────────────────
 const state = {
@@ -23,6 +24,7 @@ function createBand(prefix) {
     adminStateOverride: null,
     mixedModeOverride:  null,
     mechanicalTilt:     0,
+    riPortOverrides:    {},
   };
 }
 
@@ -30,9 +32,11 @@ function createBand(prefix) {
 state.bands.push(createBand('44XX'));
 state.bands.push(createBand('0900'));
 
-// ── Public accessor (for download.js) ────────────────────────
-export function getXML() {
-  return lastXML;
+// ── Public accessors ─────────────────────────────────────────
+export function getXML() { return lastXML; }
+
+export function getPortMap() {
+  try { return allocatePorts(state.bands); } catch (_) { return []; }
 }
 
 // ── State mutations ──────────────────────────────────────────
@@ -60,20 +64,41 @@ export function removeBand(id) {
 
 export function updateBand(id, changes) {
   const band = state.bands.find(b => b.id === id);
-  if (band) Object.assign(band, changes);
+  if (band) {
+    Object.assign(band, changes);
+    // Drop overrides for sectors that no longer exist
+    if (changes.numSectors !== undefined && band.riPortOverrides) {
+      for (const s in band.riPortOverrides) {
+        if (Number(s) > changes.numSectors) delete band.riPortOverrides[s];
+      }
+    }
+  }
+  refreshXML();
+}
+
+export function setRiPortOverride(bandId, sectorNum, port) {
+  const band = state.bands.find(b => b.id === bandId);
+  if (!band) return;
+  if (port) {
+    band.riPortOverrides[sectorNum] = port.toUpperCase();
+  } else {
+    delete band.riPortOverrides[sectorNum];
+  }
   refreshXML();
 }
 
 // ── XML refresh ──────────────────────────────────────────────
 export function refreshXML() {
+  let portMap = [];
   try {
     lastXML = generateXML(state);
     updatePreview(lastXML);
+    portMap = allocatePorts(state.bands);
   } catch (e) {
     updatePreview(`<!-- ${e.message} -->`);
   }
 
-  // Filename in preview header
+  // Filename
   const filenameEl = document.getElementById('preview-filename');
   if (filenameEl) filenameEl.textContent = `SiteEquipment_${state.nodeId}.xml`;
 
@@ -89,6 +114,9 @@ export function refreshXML() {
   // Overflow warning
   const warnEl = document.getElementById('overflow-warning');
   if (warnEl) warnEl.classList.toggle('is-visible', totalSectors > 24);
+
+  // Update RiPort select auto labels
+  updateRiPortSelects(portMap);
 }
 
 // ── Mobile tab switcher ──────────────────────────────────────

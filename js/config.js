@@ -76,13 +76,31 @@ export function allocatePorts(bands) {
     );
   }
 
+  // Collect all manually pinned ports so auto-assignment skips them
+  const pinned = new Set();
+  for (const band of bands) {
+    const ov = band.riPortOverrides || {};
+    for (let s = 1; s <= band.numSectors; s++) {
+      if (ov[s]) pinned.add(ov[s].toUpperCase());
+    }
+  }
+
   const result = [];
-  let portIndex = 0;
+  let autoIdx = 0;
 
   for (const band of bands) {
     const prefix = band.prefix === 'CUSTOM' ? (band.customPrefix ?? 'CUSTOM') : band.prefix;
+    const ov = band.riPortOverrides || {};
+
     for (let s = 1; s <= band.numSectors; s++) {
-      result.push({ prefix, sectorNum: s, bbuPort: PORT_SEQUENCE[portIndex++] });
+      const manual = ov[s];
+      if (manual) {
+        result.push({ prefix, sectorNum: s, bbuPort: manual.toUpperCase(), bandId: band.id });
+      } else {
+        while (autoIdx < PORT_SEQUENCE.length && pinned.has(PORT_SEQUENCE[autoIdx])) autoIdx++;
+        const bbuPort = autoIdx < PORT_SEQUENCE.length ? PORT_SEQUENCE[autoIdx++] : '?';
+        result.push({ prefix, sectorNum: s, bbuPort, bandId: band.id });
+      }
     }
   }
 

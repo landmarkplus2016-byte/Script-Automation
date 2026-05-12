@@ -1,5 +1,6 @@
-import { updateBand, removeBand } from './app.js';
+import { updateBand, removeBand, setRiPortOverride, getPortMap } from './app.js';
 import { getEffectivePreset } from './config.js';
+import { PORT_SEQUENCE } from './config.js';
 
 // ── Internal helpers ─────────────────────────────────────────
 
@@ -43,6 +44,67 @@ function makeRow(labelText, control) {
   return r;
 }
 
+// ── RiPort row ───────────────────────────────────────────────
+
+function buildRiPortSelect(bandId, sectorNum, override) {
+  const sel = document.createElement('select');
+  sel.className = 'riport-select' + (override ? ' is-override' : '');
+  sel.dataset.bandId = bandId;
+  sel.dataset.sector  = sectorNum;
+
+  // Auto option — text updated by updateRiPortSelects()
+  const autoOpt = document.createElement('option');
+  autoOpt.value = '';
+  autoOpt.textContent = 'auto';
+  sel.appendChild(autoOpt);
+
+  for (const port of PORT_SEQUENCE) {
+    const opt = document.createElement('option');
+    opt.value = port;
+    opt.textContent = port;
+    if (override === port) opt.selected = true;
+    sel.appendChild(opt);
+  }
+
+  if (!override) sel.value = '';
+
+  sel.addEventListener('change', () => {
+    const val = sel.value || null;
+    sel.classList.toggle('is-override', !!val);
+    setRiPortOverride(bandId, sectorNum, val);
+  });
+
+  return sel;
+}
+
+function renderRiPortsRow(band) {
+  const row = document.createElement('div');
+  row.className = 'row';
+
+  const lbl = document.createElement('span');
+  lbl.className = 'row-label';
+  lbl.textContent = 'RiPorts';
+
+  const list = document.createElement('div');
+  list.className = 'riport-list';
+
+  const ov = band.riPortOverrides || {};
+  for (let s = 1; s <= band.numSectors; s++) {
+    const item = document.createElement('div');
+    item.className = 'riport-item';
+
+    const sLbl = document.createElement('span');
+    sLbl.className   = 'riport-sector';
+    sLbl.textContent = `S${s}`;
+
+    item.append(sLbl, buildRiPortSelect(band.id, s, ov[s] || null));
+    list.appendChild(item);
+  }
+
+  row.append(lbl, list);
+  return row;
+}
+
 // ── renderBandCard ───────────────────────────────────────────
 
 function renderBandCard(band) {
@@ -61,7 +123,6 @@ function renderBandCard(band) {
   const titleGroup = document.createElement('div');
   titleGroup.className = 'band-title';
 
-  // Band name or custom input
   let nameEl;
   if (isCustom) {
     nameEl = document.createElement('input');
@@ -80,25 +141,18 @@ function renderBandCard(band) {
     nameEl.textContent = displayPrefix;
   }
 
-  // Admin state badge — keep references for live updates
   const adminBadge = document.createElement('span');
   adminBadge.className = `badge ${preset.sectorAdminState === 'UNLOCKED' ? 'unlocked' : 'locked'}`;
-  const adminDot = document.createElement('span');
-  adminDot.className = 'dot';
-  const adminText = document.createElement('span');
-  adminText.textContent = preset.sectorAdminState;
+  const adminDot  = document.createElement('span'); adminDot.className = 'dot';
+  const adminText = document.createElement('span'); adminText.textContent = preset.sectorAdminState;
   adminBadge.append(adminDot, adminText);
 
-  // RF type badge
   const rfBadge = document.createElement('span');
   rfBadge.className = 'badge rftype';
-  const rfDot = document.createElement('span');
-  rfDot.className = 'dot';
-  const rfText = document.createElement('span');
-  rfText.textContent = preset.rfType;
+  const rfDot  = document.createElement('span'); rfDot.className = 'dot';
+  const rfText = document.createElement('span'); rfText.textContent = preset.rfType;
   rfBadge.append(rfDot, rfText);
 
-  // Remove button
   const removeBtn = document.createElement('button');
   removeBtn.className = 'icon-btn';
   removeBtn.setAttribute('aria-label', 'Remove band');
@@ -112,6 +166,9 @@ function renderBandCard(band) {
   // ── Body ──────────────────────────────────────────────────
   const body = document.createElement('div');
   body.className = 'band-body';
+
+  // Declare riPortsRow here so the slider listener can reference it
+  let riPortsRow;
 
   // Sectors slider
   const sectorPct = ((band.numSectors - 1) / 7 * 100).toFixed(1);
@@ -132,6 +189,11 @@ function renderBandCard(band) {
     sectorVal.textContent = v;
     slider.style.setProperty('--pct', ((v - 1) / 7 * 100).toFixed(1) + '%');
     updateBand(band.id, { numSectors: v });
+    // Re-render RiPorts row for the new sector count
+    const newRow = renderRiPortsRow(band); // band.numSectors already updated
+    riPortsRow.replaceWith(newRow);
+    riPortsRow = newRow;
+    updateRiPortSelects(getPortMap());
   });
 
   const sliderWrap = document.createElement('div');
@@ -139,14 +201,14 @@ function renderBandCard(band) {
   sliderWrap.append(slider, sectorVal);
   body.appendChild(makeRow('Sectors', sliderWrap));
 
-  // RF type segmented control
+  // RF type segment
   const rfSeg = createSegment(['2T2R', '4T4R', '8T8R'], preset.rfType, val => {
     updateBand(band.id, { rfTypeOverride: val });
     rfText.textContent = val;
   });
   body.appendChild(makeRow('RF Type', rfSeg));
 
-  // Admin state segmented control
+  // Admin state segment
   const adminSeg = createSegment(['UNLOCKED', 'LOCKED'], preset.sectorAdminState, val => {
     updateBand(band.id, { adminStateOverride: val });
     adminBadge.className  = `badge ${val === 'UNLOCKED' ? 'unlocked' : 'locked'}`;
@@ -154,7 +216,11 @@ function renderBandCard(band) {
   }, 'state');
   body.appendChild(makeRow('Admin State', adminSeg));
 
-  // Mixed mode + optional tilt row (shares one .row)
+  // RiPorts row — assigned after body rows are appended so replaceWith works
+  riPortsRow = renderRiPortsRow(band);
+  body.appendChild(riPortsRow);
+
+  // Mixed mode + optional tilt
   const lastRow = document.createElement('div');
   lastRow.className = 'row';
 
@@ -204,8 +270,6 @@ function renderBandCard(band) {
 }
 
 // ── highlightXML ─────────────────────────────────────────────
-// Line-by-line approach handles comments, delimiters, and
-// declarations correctly before applying tag/attribute rules.
 
 export function highlightXML(xml) {
   return xml.split('\n').map(line => {
@@ -222,18 +286,13 @@ export function highlightXML(xml) {
 
     let out = escapeHtml(line);
 
-    // Text content between tags
     out = out.replace(/(&gt;)([^&<>]+?)(&lt;)/g, (m, a, txt, b) =>
       /^\s*$/.test(txt) ? m : `${a}<span class="text-content">${txt}</span>${b}`
     );
-
-    // Closing tags </Name>
     out = out.replace(
       /(&lt;\/)([A-Za-z_][\w:-]*)(&gt;)/g,
       '<span class="tag-close">$1$2$3</span>'
     );
-
-    // Opening tags <Name ...> with attribute highlighting
     out = out.replace(
       /(&lt;)([A-Za-z_][\w:-]*)([^&]*?)(\/?&gt;)/g,
       (m, lt, name, attrs, gt) => {
@@ -244,7 +303,6 @@ export function highlightXML(xml) {
         return `<span class="tag-open">${lt}${name}</span>${styledAttrs}<span class="tag-open">${gt}</span>`;
       }
     );
-
     return out;
   }).join('\n');
 }
@@ -261,17 +319,29 @@ export function renderBandCards(bands) {
 }
 
 export function updatePreview(xml) {
-  const output     = document.getElementById('xml-output');
-  const gutter     = document.getElementById('xml-gutter');
+  const output      = document.getElementById('xml-output');
+  const gutter      = document.getElementById('xml-gutter');
   const lineCountEl = document.getElementById('preview-linecount');
-  const bytesEl    = document.getElementById('preview-bytes');
+  const bytesEl     = document.getElementById('preview-bytes');
 
   const lines = xml.split('\n').length;
 
-  if (output)     output.innerHTML = highlightXML(xml);
-  if (gutter)     gutter.textContent = Array.from({ length: lines }, (_, i) => i + 1).join('\n');
+  if (output)      output.innerHTML = highlightXML(xml);
+  if (gutter)      gutter.textContent = Array.from({ length: lines }, (_, i) => i + 1).join('\n');
   if (lineCountEl) lineCountEl.textContent = lines;
-  if (bytesEl)    bytesEl.textContent = xml.length.toLocaleString();
+  if (bytesEl)     bytesEl.textContent = xml.length.toLocaleString();
+}
+
+// Updates the "auto" option label in every RiPort select to show computed port
+export function updateRiPortSelects(portMap) {
+  portMap.forEach(({ bandId, sectorNum, bbuPort }) => {
+    const sel = document.querySelector(
+      `.riport-select[data-band-id="${bandId}"][data-sector="${sectorNum}"]`
+    );
+    if (!sel) return;
+    const autoOpt = sel.querySelector('option[value=""]');
+    if (autoOpt) autoOpt.textContent = `${bbuPort} · auto`;
+  });
 }
 
 export function showCopyFeedback() {
