@@ -170,6 +170,15 @@ input, select { font-family: inherit; color: inherit; }
   color: var(--accent);
 }
 
+.topbar-logo {
+  height: 38px;
+  width: auto;
+  object-fit: contain;
+  padding-left: 14px;
+  border-left: 1px solid var(--border);
+  margin-left: 4px;
+}
+
 /* ── Main layout ───────────────────────────────────────────── */
 .layout {
   display: grid;
