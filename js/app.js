@@ -25,6 +25,7 @@ function createBand(prefix) {
     mixedModeOverride:  null,
     mechanicalTilt:     0,
     riPortOverrides:    {},
+    rruPortOverrides:   {},
   };
 }
 
@@ -67,11 +68,25 @@ export function updateBand(id, changes) {
   if (band) {
     Object.assign(band, changes);
     // Drop overrides for sectors that no longer exist
-    if (changes.numSectors !== undefined && band.riPortOverrides) {
-      for (const s in band.riPortOverrides) {
+    if (changes.numSectors !== undefined) {
+      for (const s in band.riPortOverrides || {}) {
         if (Number(s) > changes.numSectors) delete band.riPortOverrides[s];
       }
+      for (const s in band.rruPortOverrides || {}) {
+        if (Number(s) > changes.numSectors) delete band.rruPortOverrides[s];
+      }
     }
+  }
+  refreshXML();
+}
+
+export function setRruPortOverride(bandId, sectorNum, port) {
+  const band = state.bands.find(b => b.id === bandId);
+  if (!band) return;
+  if (port && port !== 'DATA_2') {
+    band.rruPortOverrides[sectorNum] = port;
+  } else {
+    delete band.rruPortOverrides[sectorNum];
   }
   refreshXML();
 }

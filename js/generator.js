@@ -150,7 +150,8 @@ function buildRiLinks(bands, portMap, baseRef) {
       lines.push('          <RiLink>');
       lines.push(`            <riLinkId>${prefix}_S${s}_1st</riLinkId>`);
       lines.push(`            <riPortRef1>${baseRef},FieldReplaceableUnit=1,RiPort=${bbuPort}</riPortRef1>`);
-      lines.push(`            <riPortRef2>${baseRef},FieldReplaceableUnit=${fruId},RiPort=DATA_2</riPortRef2>`);
+      const rruPort = (band.rruPortOverrides || {})[s] || 'DATA_2';
+      lines.push(`            <riPortRef2>${baseRef},FieldReplaceableUnit=${fruId},RiPort=${rruPort}</riPortRef2>`);
       lines.push('          </RiLink>');
     }
   }

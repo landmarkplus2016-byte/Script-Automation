@@ -1,4 +1,4 @@
-import { updateBand, removeBand, setRiPortOverride, getPortMap } from './app.js';
+import { updateBand, removeBand, setRiPortOverride, setRruPortOverride, getPortMap } from './app.js';
 import { getEffectivePreset } from './config.js';
 import { PORT_SEQUENCE } from './config.js';
 
@@ -77,6 +77,26 @@ function buildRiPortSelect(bandId, sectorNum, override) {
   return sel;
 }
 
+function buildRruPortSelect(bandId, sectorNum, override) {
+  const sel = document.createElement('select');
+  sel.className = 'riport-rru-select' + (override === 'DATA_1' ? ' is-override' : '');
+
+  ['DATA_2', 'DATA_1'].forEach(port => {
+    const opt = document.createElement('option');
+    opt.value = port;
+    opt.textContent = port;
+    if ((override || 'DATA_2') === port) opt.selected = true;
+    sel.appendChild(opt);
+  });
+
+  sel.addEventListener('change', () => {
+    sel.classList.toggle('is-override', sel.value === 'DATA_1');
+    setRruPortOverride(bandId, sectorNum, sel.value === 'DATA_1' ? 'DATA_1' : null);
+  });
+
+  return sel;
+}
+
 function renderRiPortsRow(band) {
   const row = document.createElement('div');
   row.className = 'row';
@@ -88,7 +108,9 @@ function renderRiPortsRow(band) {
   const list = document.createElement('div');
   list.className = 'riport-list';
 
-  const ov = band.riPortOverrides || {};
+  const bbuOv = band.riPortOverrides  || {};
+  const rruOv = band.rruPortOverrides || {};
+
   for (let s = 1; s <= band.numSectors; s++) {
     const item = document.createElement('div');
     item.className = 'riport-item';
@@ -97,7 +119,11 @@ function renderRiPortsRow(band) {
     sLbl.className   = 'riport-sector';
     sLbl.textContent = `S${s}`;
 
-    item.append(sLbl, buildRiPortSelect(band.id, s, ov[s] || null));
+    item.append(
+      sLbl,
+      buildRiPortSelect(band.id, s, bbuOv[s] || null),
+      buildRruPortSelect(band.id, s, rruOv[s] || null)
+    );
     list.appendChild(item);
   }
 
