@@ -84,13 +84,15 @@ const state = {
 
 | Band   | RF Type | Sector Admin | RF Port Admin | mixedModeRadio | Tilt field |
 |--------|---------|-------------|---------------|----------------|------------|
-| 44XX   | 4T4R    | UNLOCKED    | LOCKED        | false          | yes        |
-| 0900   | 2T2R    | LOCKED      | UNLOCKED      | true           | no         |
-| 1800   | 2T2R    | LOCKED      | UNLOCKED      | true           | no         |
-| 2100   | 2T2R    | LOCKED      | UNLOCKED      | true           | no         |
-| CUSTOM | user    | user        | auto from RF  | user           | if 4T4R    |
+| 44XX   | 4T4R    | UNLOCKED    | LOCKED        | false          | yes           |
+| 0900   | 2T2R    | LOCKED      | UNLOCKED      | true           | no            |
+| 1800   | 2T2R    | LOCKED      | UNLOCKED      | true           | no            |
+| 2100   | 2T2R    | LOCKED      | UNLOCKED      | true           | no            |
+| 2600   | 2T2R    | LOCKED      | UNLOCKED      | true           | no            |
+| CUSTOM | user    | user        | auto from RF  | user           | if 4T4R/8T8R  |
 
 **RF ports per type:**
+- 8T8R → branches A, B, C, D, E, F, G, H (8 branches per sector)
 - 4T4R → branches A, B, C, D (4 branches per sector)
 - 2T2R → branches A, B (2 branches per sector)
 

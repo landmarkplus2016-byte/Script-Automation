@@ -6,6 +6,7 @@ export const PORT_SEQUENCE = [
 ];
 
 export const RF_PORTS = {
+  '8T8R': ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'],
   '4T4R': ['A', 'B', 'C', 'D'],
   '2T2R': ['A', 'B'],
 };
@@ -39,6 +40,13 @@ export const BAND_PRESETS = {
     mixedModeRadio:     true,
     hasMechanicalTilt:  false,
   },
+  '2600': {
+    rfType:             '2T2R',
+    sectorAdminState:   'LOCKED',
+    rfPortAdminState:   'UNLOCKED',
+    mixedModeRadio:     true,
+    hasMechanicalTilt:  false,
+  },
 };
 
 export function getEffectivePreset(band) {
@@ -54,7 +62,7 @@ export function getEffectivePreset(band) {
   const sectorAdminState  = band.adminStateOverride ?? base.sectorAdminState;
   const mixedModeRadio    = band.mixedModeOverride  ?? base.mixedModeRadio;
   const rfPortAdminState  = rfType === '4T4R' ? 'LOCKED' : 'UNLOCKED';
-  const hasMechanicalTilt = rfType === '4T4R';
+  const hasMechanicalTilt = rfType === '4T4R' || rfType === '8T8R';
 
   return { rfType, sectorAdminState, rfPortAdminState, mixedModeRadio, hasMechanicalTilt };
 }

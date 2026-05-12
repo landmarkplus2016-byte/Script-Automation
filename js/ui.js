@@ -140,7 +140,7 @@ function renderBandCard(band) {
   body.appendChild(makeRow('Sectors', sliderWrap));
 
   // RF type segmented control
-  const rfSeg = createSegment(['2T2R', '4T4R'], preset.rfType, val => {
+  const rfSeg = createSegment(['2T2R', '4T4R', '8T8R'], preset.rfType, val => {
     updateBand(band.id, { rfTypeOverride: val });
     rfText.textContent = val;
   });

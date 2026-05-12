@@ -136,7 +136,7 @@ function init() {
   }
 
   // Add Band buttons
-  ['44XX', '0900', '1800', '2100', 'CUSTOM'].forEach(prefix => {
+  ['44XX', '0900', '1800', '2100', '2600', 'CUSTOM'].forEach(prefix => {
     document.getElementById(`btn-add-${prefix}`)
       ?.addEventListener('click', () => addBand(prefix));
   });
