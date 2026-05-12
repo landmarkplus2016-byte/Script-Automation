@@ -15,14 +15,14 @@ let lastXML    = '';
 // ── Band factory ─────────────────────────────────────────────
 function createBand(prefix) {
   return {
-    id:                nextBandId++,
+    id:                 nextBandId++,
     prefix,
-    customPrefix:      null,
-    numSectors:        3,
-    rfTypeOverride:    null,
+    customPrefix:       null,
+    numSectors:         3,
+    rfTypeOverride:     null,
     adminStateOverride: null,
-    mixedModeOverride: null,
-    mechanicalTilt:    0,
+    mixedModeOverride:  null,
+    mechanicalTilt:     0,
   };
 }
 
@@ -73,8 +73,22 @@ export function refreshXML() {
     updatePreview(`<!-- ${e.message} -->`);
   }
 
-  const el = document.getElementById('preview-filename');
-  if (el) el.textContent = `SiteEquipment_${state.nodeId}.xml`;
+  // Filename in preview header
+  const filenameEl = document.getElementById('preview-filename');
+  if (filenameEl) filenameEl.textContent = `SiteEquipment_${state.nodeId}.xml`;
+
+  // Bands count chip
+  const totalSectors = state.bands.reduce((a, b) => a + b.numSectors, 0);
+  const countEl = document.getElementById('bands-count');
+  if (countEl) {
+    const nb = state.bands.length;
+    const ns = totalSectors;
+    countEl.textContent = `${nb} band${nb !== 1 ? 's' : ''} · ${ns} sector${ns !== 1 ? 's' : ''}`;
+  }
+
+  // Overflow warning
+  const warnEl = document.getElementById('overflow-warning');
+  if (warnEl) warnEl.classList.toggle('is-visible', totalSectors > 24);
 }
 
 // ── Mobile tab switcher ──────────────────────────────────────
@@ -82,20 +96,19 @@ function initTabSwitcher() {
   const switcher = document.getElementById('tab-switcher');
   if (!switcher) return;
 
-  const formPanel    = document.getElementById('form-panel');
-  const previewPanel = document.getElementById('preview-panel');
+  const formPanel    = document.getElementById('pane-form');
+  const previewPanel = document.getElementById('pane-preview');
 
-  // Set initial active panel
-  formPanel?.classList.add('panel--active');
+  formPanel?.classList.add('active');
 
-  switcher.querySelectorAll('.tab-btn').forEach(btn => {
+  switcher.querySelectorAll('.tab').forEach(btn => {
     btn.addEventListener('click', () => {
-      switcher.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-btn--active'));
-      btn.classList.add('tab-btn--active');
+      switcher.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
 
-      const showConfigure = btn.dataset.tab === 'configure';
-      formPanel?.classList.toggle('panel--active',    showConfigure);
-      previewPanel?.classList.toggle('panel--active', !showConfigure);
+      const showForm = btn.dataset.tab === 'form';
+      formPanel?.classList.toggle('active', showForm);
+      previewPanel?.classList.toggle('active', !showForm);
     });
   });
 }
@@ -109,11 +122,17 @@ function init() {
     nodeIdEl.addEventListener('input', e => setNodeId(e.target.value.trim()));
   }
 
-  // Support System Control checkbox
+  // Support System Control — div switch
   const sscEl = document.getElementById('support-system-control');
   if (sscEl) {
-    sscEl.checked = state.supportSystemControl;
-    sscEl.addEventListener('change', e => setSupportSystemControl(e.target.checked));
+    sscEl.classList.toggle('on', state.supportSystemControl);
+    sscEl.setAttribute('aria-checked', state.supportSystemControl);
+    sscEl.addEventListener('click', () => {
+      const newVal = !state.supportSystemControl;
+      setSupportSystemControl(newVal);
+      sscEl.classList.toggle('on', newVal);
+      sscEl.setAttribute('aria-checked', newVal);
+    });
   }
 
   // Add Band buttons
@@ -122,11 +141,7 @@ function init() {
       ?.addEventListener('click', () => addBand(prefix));
   });
 
-  // Copy / Download buttons — form footer + preview footer
-  document.getElementById('btn-copy')
-    ?.addEventListener('click', copyXMLToClipboard);
-  document.getElementById('btn-download')
-    ?.addEventListener('click', downloadXMLFile);
+  // Copy / Download buttons
   document.getElementById('preview-btn-copy')
     ?.addEventListener('click', copyXMLToClipboard);
   document.getElementById('preview-btn-download')
@@ -158,7 +173,7 @@ function showUpdateBanner() {
   msg.textContent = 'A new version is available';
 
   const btn = document.createElement('button');
-  btn.className = 'update-btn';
+  btn.className   = 'update-btn';
   btn.textContent = 'Update';
   btn.addEventListener('click', async () => {
     const reg = await navigator.serviceWorker.ready;
@@ -178,4 +193,8 @@ function showUpdateBanner() {
   document.body.appendChild(banner);
 }
 
-document.addEventListener('DOMContentLoaded', init);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}

@@ -4,8 +4,8 @@
   "description": "Generate Ericsson NETCONF XML equipment configuration scripts for base station sites",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#1d4ed8",
+  "background_color": "#f4f7fb",
+  "theme_color": "#006fee",
   "icons": [
     {
       "src": "assets/icon-192.png",
