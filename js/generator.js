@@ -36,50 +36,120 @@ function buildAntennaSection(bands, baseRef) {
 
     for (let s = 1; s <= band.numSectors; s++) {
       const augId = `${prefix}_S${s}`;
-      const fruId = `${prefix}-${s}-RRUW-1`;
 
-      // AntennaUnitGroup — AU structure
-      lines.push('          <AntennaUnitGroup>');
-      lines.push(`            <antennaUnitGroupId>${augId}</antennaUnitGroupId>`);
-      lines.push('            <AntennaUnit>');
-      lines.push('              <antennaUnitId>1</antennaUnitId>');
-      lines.push('              <AntennaSubunit>');
-      lines.push('                <antennaSubunitId>1</antennaSubunitId>');
-      if (preset.hasMechanicalTilt) {
-        lines.push(`                <mechanicalAntennaTilt>${band.mechanicalTilt}</mechanicalAntennaTilt>`);
-      }
-      for (const port of rfPorts) {
-        lines.push('                <AuPort>');
-        lines.push(`                  <auPortId>${port}</auPortId>`);
-        lines.push('                </AuPort>');
-      }
-      lines.push('              </AntennaSubunit>');
-      lines.push('            </AntennaUnit>');
-      lines.push('          </AntennaUnitGroup>');
+      if (band.dualRru) {
+        // ── Dual RRU (Node Daisy) ────────────────────────────────────
+        // Split ports evenly: each RRU gets rfPorts.length/2 ports (same letter names)
+        const half      = rfPorts.length / 2;
+        const fruPorts  = rfPorts.slice(0, half); // e.g. ['A'] for 2T2R, ['A','B'] for 4T4R
+        const fruId1    = `${prefix}-${s}-RRUW-1`;
+        const fruId2    = `${prefix}-${s}-RRUW-2`;
 
-      // Per RF port: FRU entry + RfBranch entry
-      let firstPort = true;
-      for (const port of rfPorts) {
-        lines.push('          <FieldReplaceableUnit>');
-        lines.push(`            <fieldReplaceableUnitId>${fruId}</fieldReplaceableUnitId>`);
-        if (firstPort) {
-          lines.push('            <administrativeState>UNLOCKED</administrativeState>');
-          firstPort = false;
+        // AntennaUnitGroup — all N AuPorts, numbered 1…N
+        lines.push('          <AntennaUnitGroup>');
+        lines.push(`            <antennaUnitGroupId>${augId}</antennaUnitGroupId>`);
+        lines.push('            <AntennaUnit>');
+        lines.push('              <antennaUnitId>1</antennaUnitId>');
+        lines.push('              <AntennaSubunit>');
+        lines.push('                <antennaSubunitId>1</antennaSubunitId>');
+        if (preset.hasMechanicalTilt) {
+          lines.push(`                <mechanicalAntennaTilt>${band.mechanicalTilt}</mechanicalAntennaTilt>`);
         }
-        lines.push('            <RfPort>');
-        lines.push(`              <rfPortId>${port}</rfPortId>`);
-        lines.push(`              <administrativeState>${preset.rfPortAdminState}</administrativeState>`);
-        lines.push('            </RfPort>');
-        lines.push('          </FieldReplaceableUnit>');
+        for (let i = 1; i <= rfPorts.length; i++) {
+          lines.push('                <AuPort>');
+          lines.push(`                  <auPortId>${i}</auPortId>`);
+          lines.push('                </AuPort>');
+        }
+        lines.push('              </AntennaSubunit>');
+        lines.push('            </AntennaUnit>');
+        lines.push('          </AntennaUnitGroup>');
+
+        // RRUW-1 → branches 1 … half
+        let branchNum = 1;
+        let isFirst = true;
+        for (const port of fruPorts) {
+          lines.push('          <FieldReplaceableUnit>');
+          lines.push(`            <fieldReplaceableUnitId>${fruId1}</fieldReplaceableUnitId>`);
+          if (isFirst) { lines.push('            <administrativeState>UNLOCKED</administrativeState>'); isFirst = false; }
+          lines.push('            <RfPort>');
+          lines.push(`              <rfPortId>${port}</rfPortId>`);
+          lines.push(`              <administrativeState>${preset.rfPortAdminState}</administrativeState>`);
+          lines.push('            </RfPort>');
+          lines.push('          </FieldReplaceableUnit>');
+          lines.push('          <AntennaUnitGroup>');
+          lines.push(`            <antennaUnitGroupId>${augId}</antennaUnitGroupId>`);
+          lines.push('            <RfBranch>');
+          lines.push(`              <rfBranchId>${branchNum}</rfBranchId>`);
+          lines.push(`              <auPortRef>${baseRef},AntennaUnitGroup=${augId},AntennaUnit=1,AntennaSubunit=1,AuPort=${branchNum}</auPortRef>`);
+          lines.push(`              <rfPortRef>${baseRef},FieldReplaceableUnit=${fruId1},RfPort=${port}</rfPortRef>`);
+          lines.push('            </RfBranch>');
+          lines.push('          </AntennaUnitGroup>');
+          branchNum++;
+        }
+
+        // RRUW-2 → branches half+1 … N
+        isFirst = true;
+        for (const port of fruPorts) {
+          lines.push('          <FieldReplaceableUnit>');
+          lines.push(`            <fieldReplaceableUnitId>${fruId2}</fieldReplaceableUnitId>`);
+          if (isFirst) { lines.push('            <administrativeState>UNLOCKED</administrativeState>'); isFirst = false; }
+          lines.push('            <RfPort>');
+          lines.push(`              <rfPortId>${port}</rfPortId>`);
+          lines.push(`              <administrativeState>${preset.rfPortAdminState}</administrativeState>`);
+          lines.push('            </RfPort>');
+          lines.push('          </FieldReplaceableUnit>');
+          lines.push('          <AntennaUnitGroup>');
+          lines.push(`            <antennaUnitGroupId>${augId}</antennaUnitGroupId>`);
+          lines.push('            <RfBranch>');
+          lines.push(`              <rfBranchId>${branchNum}</rfBranchId>`);
+          lines.push(`              <auPortRef>${baseRef},AntennaUnitGroup=${augId},AntennaUnit=1,AntennaSubunit=1,AuPort=${branchNum}</auPortRef>`);
+          lines.push(`              <rfPortRef>${baseRef},FieldReplaceableUnit=${fruId2},RfPort=${port}</rfPortRef>`);
+          lines.push('            </RfBranch>');
+          lines.push('          </AntennaUnitGroup>');
+          branchNum++;
+        }
+
+      } else {
+        // ── Single RRU (original behavior) ──────────────────────────
+        const fruId = `${prefix}-${s}-RRUW-1`;
 
         lines.push('          <AntennaUnitGroup>');
         lines.push(`            <antennaUnitGroupId>${augId}</antennaUnitGroupId>`);
-        lines.push('            <RfBranch>');
-        lines.push(`              <rfBranchId>${port}</rfBranchId>`);
-        lines.push(`              <auPortRef>${baseRef},AntennaUnitGroup=${augId},AntennaUnit=1,AntennaSubunit=1,AuPort=${port}</auPortRef>`);
-        lines.push(`              <rfPortRef>${baseRef},FieldReplaceableUnit=${fruId},RfPort=${port}</rfPortRef>`);
-        lines.push('            </RfBranch>');
+        lines.push('            <AntennaUnit>');
+        lines.push('              <antennaUnitId>1</antennaUnitId>');
+        lines.push('              <AntennaSubunit>');
+        lines.push('                <antennaSubunitId>1</antennaSubunitId>');
+        if (preset.hasMechanicalTilt) {
+          lines.push(`                <mechanicalAntennaTilt>${band.mechanicalTilt}</mechanicalAntennaTilt>`);
+        }
+        for (const port of rfPorts) {
+          lines.push('                <AuPort>');
+          lines.push(`                  <auPortId>${port}</auPortId>`);
+          lines.push('                </AuPort>');
+        }
+        lines.push('              </AntennaSubunit>');
+        lines.push('            </AntennaUnit>');
         lines.push('          </AntennaUnitGroup>');
+
+        let firstPort = true;
+        for (const port of rfPorts) {
+          lines.push('          <FieldReplaceableUnit>');
+          lines.push(`            <fieldReplaceableUnitId>${fruId}</fieldReplaceableUnitId>`);
+          if (firstPort) { lines.push('            <administrativeState>UNLOCKED</administrativeState>'); firstPort = false; }
+          lines.push('            <RfPort>');
+          lines.push(`              <rfPortId>${port}</rfPortId>`);
+          lines.push(`              <administrativeState>${preset.rfPortAdminState}</administrativeState>`);
+          lines.push('            </RfPort>');
+          lines.push('          </FieldReplaceableUnit>');
+          lines.push('          <AntennaUnitGroup>');
+          lines.push(`            <antennaUnitGroupId>${augId}</antennaUnitGroupId>`);
+          lines.push('            <RfBranch>');
+          lines.push(`              <rfBranchId>${port}</rfBranchId>`);
+          lines.push(`              <auPortRef>${baseRef},AntennaUnitGroup=${augId},AntennaUnit=1,AntennaSubunit=1,AuPort=${port}</auPortRef>`);
+          lines.push(`              <rfPortRef>${baseRef},FieldReplaceableUnit=${fruId},RfPort=${port}</rfPortRef>`);
+          lines.push('            </RfBranch>');
+          lines.push('          </AntennaUnitGroup>');
+        }
       }
     }
   }
@@ -121,17 +191,20 @@ function buildRRUFrus(bands) {
 
   for (const band of bands) {
     const prefix = getPrefix(band);
+    const count  = band.dualRru ? 2 : 1;
     for (let s = 1; s <= band.numSectors; s++) {
-      const fruId = `${prefix}-${s}-RRUW-1`;
-      lines.push('          <FieldReplaceableUnit>');
-      lines.push(`            <fieldReplaceableUnitId>${fruId}</fieldReplaceableUnitId>`);
-      lines.push('            <RiPort>');
-      lines.push('              <riPortId>DATA_1</riPortId>');
-      lines.push('            </RiPort>');
-      lines.push('            <RiPort>');
-      lines.push('              <riPortId>DATA_2</riPortId>');
-      lines.push('            </RiPort>');
-      lines.push('          </FieldReplaceableUnit>');
+      for (let r = 1; r <= count; r++) {
+        const fruId = `${prefix}-${s}-RRUW-${r}`;
+        lines.push('          <FieldReplaceableUnit>');
+        lines.push(`            <fieldReplaceableUnitId>${fruId}</fieldReplaceableUnitId>`);
+        lines.push('            <RiPort>');
+        lines.push('              <riPortId>DATA_1</riPortId>');
+        lines.push('            </RiPort>');
+        lines.push('            <RiPort>');
+        lines.push('              <riPortId>DATA_2</riPortId>');
+        lines.push('            </RiPort>');
+        lines.push('          </FieldReplaceableUnit>');
+      }
     }
   }
 
@@ -145,14 +218,26 @@ function buildRiLinks(bands, portMap, baseRef) {
   for (const band of bands) {
     const prefix = getPrefix(band);
     for (let s = 1; s <= band.numSectors; s++) {
-      const fruId  = `${prefix}-${s}-RRUW-1`;
+      const fruId1  = `${prefix}-${s}-RRUW-1`;
       const bbuPort = portMap[idx++].bbuPort;
+      const rruPort = (band.rruPortOverrides || {})[s] || 'DATA_2';
+
+      // BBU → RRUW-1
       lines.push('          <RiLink>');
       lines.push(`            <riLinkId>${prefix}_S${s}_1st</riLinkId>`);
       lines.push(`            <riPortRef1>${baseRef},FieldReplaceableUnit=1,RiPort=${bbuPort}</riPortRef1>`);
-      const rruPort = (band.rruPortOverrides || {})[s] || 'DATA_2';
-      lines.push(`            <riPortRef2>${baseRef},FieldReplaceableUnit=${fruId},RiPort=${rruPort}</riPortRef2>`);
+      lines.push(`            <riPortRef2>${baseRef},FieldReplaceableUnit=${fruId1},RiPort=${rruPort}</riPortRef2>`);
       lines.push('          </RiLink>');
+
+      // RRUW-1 DATA_2 → RRUW-2 DATA_1 (daisy chain — only when Dual RRU enabled)
+      if (band.dualRru) {
+        const fruId2 = `${prefix}-${s}-RRUW-2`;
+        lines.push('          <RiLink>');
+        lines.push(`            <riLinkId>${prefix}_S${s}_ND</riLinkId>`);
+        lines.push(`            <riPortRef1>${baseRef},FieldReplaceableUnit=${fruId1},RiPort=DATA_2</riPortRef1>`);
+        lines.push(`            <riPortRef2>${baseRef},FieldReplaceableUnit=${fruId2},RiPort=DATA_1</riPortRef2>`);
+        lines.push('          </RiLink>');
+      }
     }
   }
 
@@ -191,8 +276,16 @@ function buildNodeSupport(bands, baseRef) {
       if (preset.mixedModeRadio) {
         lines.push('            <mixedModeRadio>true</mixedModeRadio>');
       }
-      for (const port of rfPorts) {
-        lines.push(`            <rfBranchRef>${baseRef},AntennaUnitGroup=${augId},RfBranch=${port}</rfBranchRef>`);
+      if (band.dualRru) {
+        // Dual RRU branches are numbered 1…N
+        for (let i = 1; i <= rfPorts.length; i++) {
+          lines.push(`            <rfBranchRef>${baseRef},AntennaUnitGroup=${augId},RfBranch=${i}</rfBranchRef>`);
+        }
+      } else {
+        // Single RRU branches use port letters (A, B…)
+        for (const port of rfPorts) {
+          lines.push(`            <rfBranchRef>${baseRef},AntennaUnitGroup=${augId},RfBranch=${port}</rfBranchRef>`);
+        }
       }
       lines.push('          </SectorEquipmentFunction>');
     }

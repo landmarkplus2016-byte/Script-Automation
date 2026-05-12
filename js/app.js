@@ -24,6 +24,7 @@ function createBand(prefix) {
     adminStateOverride: null,
     mixedModeOverride:  null,
     mechanicalTilt:     0,
+    dualRru:            false,
     riPortOverrides:    {},
     rruPortOverrides:   {},
   };

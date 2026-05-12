@@ -242,6 +242,24 @@ function renderBandCard(band) {
   }, 'state');
   body.appendChild(makeRow('Admin State', adminSeg));
 
+  // Dual RRU toggle row
+  const dualRow = document.createElement('div');
+  dualRow.className = 'row';
+  const dualCheck = document.createElement('div');
+  dualCheck.className = 'checkbox-row';
+  const dualBox = document.createElement('div');
+  dualBox.className = 'checkbox' + (band.dualRru ? ' on' : '');
+  const dualText = document.createElement('span');
+  dualText.textContent = 'Dual RRU (Node Daisy)';
+  dualCheck.append(dualBox, dualText);
+  dualCheck.addEventListener('click', () => {
+    const newVal = !dualBox.classList.contains('on');
+    dualBox.classList.toggle('on', newVal);
+    updateBand(band.id, { dualRru: newVal });
+  });
+  dualRow.appendChild(dualCheck);
+  body.appendChild(dualRow);
+
   // RiPorts row — assigned after body rows are appended so replaceWith works
   riPortsRow = renderRiPortsRow(band);
   body.appendChild(riPortsRow);
